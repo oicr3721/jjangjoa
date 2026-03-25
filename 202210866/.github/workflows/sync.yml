@@ -1,0 +1,26 @@
+name: Sync to Team Repo
+
+on:
+  push:
+    branches:
+      - main  # 내 리포지토리의 main 브랜치에 코드가 올라갈 때 작동
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository
+        uses: actions/checkout@v3
+
+      - name: Pushes to Team Repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.TEAM_REPO_TOKEN }} # 2단계에서 등록한 토큰 이름
+        with:
+          source-directory: '.' # 내 리포지토리 전체 파일을 보냄
+          destination-github-username: 'oicr3721' # 팀 리포지토리 소유자
+          destination-repository-name: 'jjangjoa' # 팀 리포지토리 이름
+          target-directory: '202210866' # 팀 리포지토리 내의 타겟 폴더
+          target-branch: 'main' # 팀 리포지토리의 대상 브랜치
+          user-email: 'Runphase7@gmail.com' # ★ 본인 이메일로 수정하세요!
+          commit-message: 'Auto-sync: BigData_Visualization 리포지토리에서 자동 업데이트'
