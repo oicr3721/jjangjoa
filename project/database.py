@@ -1,6 +1,10 @@
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("notices.db")
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "notices.db"
+
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 
 
 def init_db():
@@ -13,7 +17,9 @@ def init_db():
         game TEXT,
         title TEXT,
         date TEXT,
-        url TEXT UNIQUE
+        url TEXT UNIQUE,
+        content TEXT,
+        summary TEXT
 
     )
 
@@ -22,34 +28,51 @@ def init_db():
     conn.commit()
 
 
+
 def save_notice(data):
 
     try:
 
         conn.execute("""
 
-        INSERT INTO notices(game, title, date, url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO notices(
+            game,
+            title,
+            date,
+            url,
+            content,
+            summary
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
 
         """, (
             data["game"],
             data["title"],
             data["date"],
-            data["url"]
+            data["url"],
+            data.get("content", ""),
+            data.get("summary", "")
         ))
 
         conn.commit()
 
-    except:
-        pass
+    except Exception as e:
+        print("DB save error:", e)
+
 
 
 def load_all():
 
     cursor = conn.execute("""
 
-    SELECT game, title, date, url
+    SELECT
+        game,
+        title,
+        date,
+        url,
+        summary
     FROM notices
+    ORDER BY id DESC
 
     """)
 

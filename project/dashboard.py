@@ -1,36 +1,46 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+from pathlib import Path
 
 
-conn = sqlite3.connect("notices.db")
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "notices.db"
+
+conn = sqlite3.connect(DB_PATH)
 
 
-df = pd.read_sql_query("""
+st.set_page_config(
+    page_title="게임 공지 대시보드",
+    layout="wide"
+)
 
+
+query = """
 SELECT *
 FROM notices
-
-""", conn)
-
-
-st.title("게임 공지 모음")
+ORDER BY id DESC
+"""
 
 
-# 게임 선택
+df = pd.read_sql_query(query, conn)
+
+
+st.title("게임 공지 요약 대시보드")
+
+
+if df.empty:
+    st.warning("공지 데이터가 없습니다.")
+    st.stop()
+
 
 games = df["game"].unique()
 
 selected_game = st.selectbox(
-
     "게임 선택",
-
     ["전체"] + list(games)
-
 )
 
-
-# 검색
 
 keyword = st.text_input("공지 검색")
 
@@ -39,31 +49,43 @@ filtered = df
 
 
 if selected_game != "전체":
-
-    filtered = filtered[filtered["game"] == selected_game]
-
-
-if keyword:
-
     filtered = filtered[
-        filtered["title"].str.contains(keyword, case=False)
+        filtered["game"] == selected_game
     ]
 
 
-st.write(f"{len(filtered)}개의 공지")
+if keyword:
+    filtered = filtered[
+        filtered["title"].str.contains(
+            keyword,
+            case=False,
+            na=False
+        )
+    ]
+
+
+st.write(f"총 {len(filtered)}개의 공지")
 
 
 for _, row in filtered.iterrows():
 
-    st.markdown(f"""
+    with st.container(border=True):
 
-### {row['title']}
+        st.subheader(row["title"])
 
-게임: {row['game']}  
-날짜: {row['date']}  
+        col1, col2 = st.columns(2)
 
-[공지 바로가기]({row['url']})
+        with col1:
+            st.write(f"게임: {row['game']}")
 
----
+        with col2:
+            st.write(f"날짜: {row['date']}")
 
-""")
+        st.markdown("### AI 요약")
+
+        st.write(row.get("summary", "요약 없음"))
+
+        st.link_button(
+            "공지 바로가기",
+            row["url"]
+        )

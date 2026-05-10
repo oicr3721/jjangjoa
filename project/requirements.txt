@@ -1,5 +1,8 @@
-streamlit
-pandas
 requests
 beautifulsoup4
-lxml
+pandas
+streamlit
+transformers
+torch
+sentencepiece
+groq

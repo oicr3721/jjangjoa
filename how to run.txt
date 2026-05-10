@@ -1,0 +1,9 @@
+(최초 실행 시에만. 패키지 다운)
+pip install -r requirements.txt
+
+cd {project 폴더 경로}
+python main.py
+python -m streamlit run dashboard.py
+
+(디버깅용)
+python debug_db.py
