@@ -1,0 +1,17 @@
+# 주의사항
+crawler.py, sentiment_analysis.py, wordcloud_gen.py, main.py, steam_comments.db (크롤링이 되어있다면)
+가 모두 한 폴더 안에 있어야함
+
+(준비물)
+pip download list 에 있는 패키지 두 개 다운받는 명령어 실행
+
+main.py 만 실행하면 됨
+실행하면 터미널에
+크롤링 결과(db에 저장이 되었는가),
+감정 분석 결과(긍정positive, 부정negative, 중립neutral),
+워드클라우드 시각화(왼쪽부터 긍정,부정,중립)
+(워드클라우드는 turtle처럼 파이썬 라이브러리 전용 프로그램으로 실행됨)
+
+
+크롤링 하고 싶은 게임을 바꾸고 싶다
+->game_id 를 바꿀 것
