@@ -1,0 +1,29 @@
+**최초 세팅**
+
+1. backend 폴더로 이동 (터미널에서 실행) : cd {newproject/backend 폴더 경로}
+2. 패키지 설치(최초 1번) : python -m pip install -r requirements.txt
+3. backend 폴더 내부에 .env 파일 생성 (최초 1번) : VS Code에서 new file하고 파일이름 .env 해서 생성. (python 파일 아니고 그냥 .env임)
+    1. .env에 카카오 API 키 입력 : KAKAO_REST_API_KEY={발급 받은 카카오 Rest API Key}
+        1. 카카오 API 발급 하고 제품 설정>카카오맵>사용설정 ON 해야 됨.
+4. 가상환경 생성 (최초 1번) : python -m venv venv
+    1. 가상환경 활성화 : venv\Scripts\activate
+    2. 가상환경 활성화 중 에러 발생 시 : Set-ExecutionPolicy RemoteSigned -Scope CurrentUser 하고 다시 실행
+
+**테스트 방법**
+
+1. backend 폴더로 이동 (터미널에서 실행) : cd {newproject/backend 폴더 경로}
+2. FastAPI 서버 실행 : python -m uvicorn app.main:app --reload
+3. Swagger API 테스트 : 인터넷 브라우저로 http://127.0.0.1:8000/docs 접속
+4. 페이지에서 POST recommend -> Try it out -> 테스트할 JSON 입력
+ex)
+{
+"conditions": [
+"혼밥 가능",
+"든든한",
+"안 매운"
+],
+"latitude": 37.5665,
+"longitude": 126.9780
+}
+5. Excute 클릭하면 실행됨. ( Reponse body 부분이 반환 결과. )
+6. 서버 종료는 터미널에서 컨트롤+C
