@@ -19,22 +19,26 @@ class KakaoClient:
             "Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"
         }
 
+        # x = 경도(longitude), y = 위도(latitude)
         params = {
             "query": keyword,
-            "x": longitude,
-            "y": latitude,
+            "x": str(longitude),
+            "y": str(latitude),
             "radius": radius,
             "size": 15,
-            "sort": "distance"
+            "sort": "distance",
+            "category_group_code": "FD6"  # 음식점만 필터
         }
 
-        response = requests.get(
-            self.BASE_URL,
-            headers=headers,
-            params=params
-        )
-
-        #print(response.status_code)
-        #print(response.text)
-
-        return response.json().get("documents", [])
+        try:
+            response = requests.get(
+                self.BASE_URL,
+                headers=headers,
+                params=params,
+                timeout=5
+            )
+            data = response.json()
+            return data.get("documents", [])
+        except Exception as e:
+            print(f"Kakao API error: {e}")
+            return []
