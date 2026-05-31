@@ -104,6 +104,22 @@
   <!-- 지도 -->
   <div id="map" class="map-area"></div>
 
+  <!-- 정렬 바 -->
+  <div id="sortBar" class="sort-bar hidden">
+    <button class="sort-btn active" data-sort="score" onclick="setSortMode('score')">
+      ✨ 최적순
+    </button>
+    <button class="sort-btn" data-sort="distance" onclick="setSortMode('distance')">
+      📍 거리순
+    </button>
+    <button class="sort-btn" data-sort="keyword" onclick="setSortMode('keyword')">
+      🍽️ 메뉴순
+    </button>
+    <button class="sort-btn" data-sort="review" onclick="setSortMode('review')">
+      ⭐ 리뷰순
+    </button>
+  </div>
+
   <!-- 키워드 필터 바 -->
   <div id="keywordFilterBar" class="keyword-filter-bar hidden"></div>
 

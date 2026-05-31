@@ -43,6 +43,10 @@ body {
   min-height: 100vh;
 }
 
+.hidden {
+  display: none !important;
+}
+
 /* ===== Screens ===== */
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; animation: fadeUp .3s ease both; }
@@ -271,6 +275,7 @@ body {
 .preset-item-del { color: var(--text3); cursor: pointer; font-size: .68rem; transition: color .15s; }
 .preset-item-del:hover { color: #e05a5a; }
 .preset-empty { font-size: .81rem; color: var(--text3); }
+.preset-empty.hidden { display: none; }
 
 .search-btn {
   display: flex;
@@ -636,4 +641,129 @@ body {
   .map-area { height: 200px; }
   .card-img-wrap { width: 64px; }
   .card-img-emoji { font-size: 1.6rem; }
+}
+
+/* ===== 정렬 바 ===== */
+.sort-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.sort-bar.hidden { display: none; }
+.sort-bar::-webkit-scrollbar { height: 0; }
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  font-family: var(--font-body);
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sort-btn:hover {
+  border-color: var(--border-md);
+  color: var(--text);
+}
+.sort-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ===== 카드 레이아웃 (새 구조) ===== */
+/* .card-left / .card-right 로 좌우 분리 */
+.card-left {
+  width: 88px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-thumb-wrap {
+  width: 88px;
+  height: 100%;
+  min-height: 96px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-thumb {
+  width: 88px;
+  height: 100%;
+  min-height: 96px;
+  object-fit: cover;
+  display: block;
+}
+.card-thumb-fallback {
+  font-size: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 96px;
+}
+.card-right {
+  flex: 1;
+  padding: 13px 14px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ===== 리뷰 점수 배지 ===== */
+.card-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: .76rem;
+  font-weight: 600;
+  color: #d97706;   /* amber-600 */
+  background: #fef3c7;
+  border-radius: var(--radius-xs);
+  padding: 2px 7px;
+  border: 1px solid #fde68a;
+}
+.card-review.no-review {
+  color: var(--text3);
+  background: var(--bg2);
+  border-color: var(--border);
+  font-weight: 400;
+}
+
+/* 카카오맵 링크 */
+.card-kakao-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: .74rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.card-kakao-link:hover { text-decoration: underline; }
+
+/* ===== 모바일 보정 ===== */
+@media (max-width: 400px) {
+  .card-left, .card-thumb-wrap, .card-thumb { width: 72px; }
+  .card-thumb-fallback { width: 72px; font-size: 1.8rem; }
+  .sort-btn { font-size: .72rem; padding: 4px 10px; }
 }

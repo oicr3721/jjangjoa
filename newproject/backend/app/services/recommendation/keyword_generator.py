@@ -1,80 +1,175 @@
 import json
 import re
+
 from groq import Groq
 
-from app.data.condition_rules import CONDITION_RULES
 from app.core.config import GROQ_API_KEY
+from app.data.food_tags import FOOD_TAGS
+from app.data.condition_groups import CONDITION_GROUPS
 
-DEFAULT_KEYWORDS = ["맛집", "식당", "음식점"]
-
-# 🔥 Groq 클라이언트
-_client = Groq(api_key=GROQ_API_KEY)
-
-# 🔥 fallback 모델 리스트 (중요)
-GROQ_MODELS = [
-    "llama-3.3-70b-versatile",   # 최신/정확
-    "llama-3.1-8b-instant",      # 빠르고 안정
-    "llama3-70b-8192"            # 레거시 대체
+DEFAULT_KEYWORDS = [
+    "맛집",
+    "식당",
+    "음식점"
 ]
 
-SYSTEM_PROMPT = """
-당신은 음식점 검색 키워드 생성기입니다.
+_client = Groq(api_key=GROQ_API_KEY)
 
-사용자의 조건을 보고 카카오맵 검색에 적합한 음식 종류 키워드를 생성하세요.
+GROQ_MODELS = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192"
+]
+
+
+SYSTEM_PROMPT = """
+당신은 음식 추천 전문가입니다.
 
 규칙:
-- 음식 종류명만 출력 (예: 국밥, 초밥, 삼겹살, 파스타)
-- 너무 구체적인 요리는 금지 (바지락칼국수 X → 칼국수 O)
-- 8개 이하
-- 반드시 JSON 배열만 출력
-- 설명 금지
-- 반드시 한국어 음식명만 사용 (영어 금지, 예: bossam → 보쌈)
-
-예:
-["국밥", "삼겹살", "초밥"]
+- 한국에서 실제로 널리 알려진 음식만 사용한다.
+- 존재 여부가 불확실한 음식은 절대 생성하지 않는다.
+- 새로운 음식명을 만들지 않는다.
+- 음식 종류명만 출력한다.
+- 너무 구체적인 메뉴는 금지한다.
+- 반드시 JSON 배열만 출력한다.
+- 최대 8개 출력한다.
 """
 
 
 class KeywordGenerator:
 
-    def generate(self, conditions: list[str], free_text: str = "") -> list[str]:
-        if free_text and free_text.strip():
-            return self._ai_generate(free_text.strip())
+    # =========================
+    # ENTRY
+    # =========================
+    def generate(self, condition_keys: list[str], free_text: str = "") -> list[str]:
 
-        if not conditions:
+        if free_text and free_text.strip():
+            keywords = self._generate_from_free_text(free_text.strip())
+            return keywords or DEFAULT_KEYWORDS
+
+        if not condition_keys:
             return DEFAULT_KEYWORDS
 
-        rule_context = self._build_rule_context(conditions)
-        return self._ai_generate(rule_context)
+        return self._generate_from_conditions(condition_keys)
 
-    def _build_rule_context(self, conditions: list[str]) -> str:
-        include_set = set()
-        exclude_set = set()
+    # =========================
+    # MAIN
+    # =========================
+    def _generate_from_conditions(self, condition_keys: list[str]) -> list[str]:
 
-        for cond in conditions:
-            rule = CONDITION_RULES.get(cond)
-            if not rule:
+        positive, negative = self._split_conditions(condition_keys)
+
+        db_candidates = []
+
+        for food, tags in FOOD_TAGS.items():
+
+            if self._match_food(tags, positive, negative):
+                db_candidates.append(food)
+
+        print("[DB CANDIDATES]", db_candidates)
+
+        if len(db_candidates) >= 5:
+            return db_candidates[:8]
+
+        prompt = self._build_condition_prompt(condition_keys, db_candidates)
+
+        ai_candidates = self._ai_generate(prompt)
+
+        merged = []
+        seen = set()
+
+        for food in (db_candidates + ai_candidates):
+
+            if food in seen:
                 continue
-            include_set.update(rule.get("include", []))
-            exclude_set.update(rule.get("exclude", []))
 
-        include_list = list(include_set - exclude_set)
-        exclude_list = list(exclude_set)
+            seen.add(food)
+            merged.append(food)
 
-        parts = [f"선택 조건: {', '.join(conditions)}"]
+        return merged[:8]
 
-        if include_list:
-            parts.append(f"추천 음식 힌트: {', '.join(include_list[:12])}")
+    # =========================
+    # FREE TEXT
+    # =========================
+    def _generate_from_free_text(self, free_text: str) -> list[str]:
 
-        if exclude_list:
-            parts.append(f"제외 음식: {', '.join(exclude_list[:8])}")
+        prompt = f"""
+사용자 요청:
+{free_text}
 
-        return " / ".join(parts)
+카카오맵 검색용 음식 종류를 추천하라.
 
-    def _ai_generate(self, user_input: str) -> list[str]:
+규칙:
+- 음식 종류만 출력
+- JSON 배열만 출력
+"""
 
-        #  모델 fallback 루프
+        return self._ai_generate(prompt)
+
+    # =========================
+    # 🔥 핵심: CONDITION SPLIT
+    # =========================
+    def _split_conditions(self, condition_keys: list[str]):
+
+        positive = set()
+        negative = set()
+
+        for c in condition_keys:
+
+            if c.startswith("no_"):
+                negative.add(c.replace("no_", ""))
+            else:
+                positive.add(c)
+
+        return positive, negative
+
+    # =========================
+    # 🔥 핵심: MATCH LOGIC
+    # =========================
+    def _match_food(self, food_tags: set[str], positive: set[str], negative: set[str]) -> bool:
+
+        # 1. 먼저 negative 컷 (가장 중요)
+        if negative and any(tag in food_tags for tag in negative):
+            return False
+
+        # 2. positive 조건 체크
+        if positive:
+            return all(tag in food_tags for tag in positive)
+
+        return True
+
+    # =========================
+    # PROMPT
+    # =========================
+    def _build_condition_prompt(self, condition_keys: list[str], db_candidates: list[str]) -> str:
+
+        labels = []
+
+        for key in condition_keys:
+            condition = CONDITION_GROUPS.get(key)
+            if condition:
+                labels.append(condition["label"])
+
+        prompt = ["사용자 조건:"]
+        prompt.extend(f"- {label}" for label in labels)
+
+        if db_candidates:
+            prompt.append("")
+            prompt.append("조건을 만족하는 음식 예시:")
+            prompt.append(", ".join(db_candidates[:20]))
+
+        prompt.append("")
+        prompt.append("조건을 만족하는 실제 음식만 추천하라.")
+
+        return "\n".join(prompt)
+
+    # =========================
+    # LLM CALL
+    # =========================
+    def _ai_generate(self, prompt: str) -> list[str]:
+
         for model in GROQ_MODELS:
+
             try:
                 print(f"[Groq] 모델 시도: {model}")
 
@@ -82,15 +177,15 @@ class KeywordGenerator:
                     model=model,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_input}
+                        {"role": "user", "content": prompt}
                     ],
-                    temperature=0.2,
+                    temperature=0.2
                 )
 
                 raw = response.choices[0].message.content.strip()
-                print(f"[Groq RAW] {raw}")
 
-                # 1차 JSON 파싱
+                print("[RAW]", raw)
+
                 try:
                     data = json.loads(raw)
                     if isinstance(data, list):
@@ -98,8 +193,8 @@ class KeywordGenerator:
                 except:
                     pass
 
-                # 2차 regex 파싱
                 match = re.search(r"\[.*\]", raw, re.DOTALL)
+
                 if match:
                     data = json.loads(match.group())
                     if isinstance(data, list):
@@ -107,8 +202,6 @@ class KeywordGenerator:
 
             except Exception as e:
                 print(f"[Groq FAIL] model={model}, error={e}")
-                continue  #  다음 모델로 이동
+                continue
 
-        #  모든 모델 실패 시 fallback
-        print("[Groq] 모든 모델 실패 → DEFAULT_KEYWORDS 반환")
-        return DEFAULT_KEYWORDS
+        return []

@@ -1,9 +1,16 @@
-# app/api/routes/conditions.py
 from fastapi import APIRouter
-from app.data.condition_rules import CONDITION_RULES
+from app.data.condition_groups import CONDITION_GROUPS
 
 router = APIRouter()
 
 @router.get("/conditions")
 def get_conditions():
-    return {"conditions": list(CONDITION_RULES.keys())}
+
+    return [
+        {
+            "key": key,
+            "label": value["label"],
+            "emoji": value["emoji"]
+        }
+        for key, value in CONDITION_GROUPS.items()
+    ]
