@@ -1,8 +1,0 @@
-requests
-beautifulsoup4
-pandas
-streamlit
-transformers
-torch
-sentencepiece
-groq

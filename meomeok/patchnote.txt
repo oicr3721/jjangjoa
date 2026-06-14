@@ -1,0 +1,10 @@
+<2026.05.19>
+- main.py 코드 변경, 추가 # 기존에 올라와있는 main.py 대신 main_update.py 로 올려놓은 파일을 main.py 로 이름 바꾸고 기존 howtotest 절차대로 실행하고 templates 폴더의 index.html 을 실행하면 됨
+- api/routes/ 폴더에 conditions.py 파일 추가
+- templates 폴더와 index.html 파일 추가
+- index.html 로 보는 걸 추천하지만, 기존 방식대로 링크 입력하면 FastAPI - Swagger UI 로도 볼 수 있음
+혹시라도 API 키 사용 한도에 도달했을 경우 또는 API 가 제대로 작동되지 않는 것이 의심될 때 키 입력과 입력 장소에 대해
+- index.html 6번째 줄 <script src 부분 appkey=Javascript 키 (6f3fddef9154777af7c6801d467d5913)
+- config.py KAKAO_REST_API_KEY = "7b2081371bac24ab5af0ea0b2ba3c069" 로 대체하면 .env 파일 없이도 가능하긴 함
+환경 변수 설정 했는데도 모듈 인식이 안되는데 pip install 명령어 입력하면 이미 설치됐다고 뜨지만 실행은 안될때
+- 프로젝트 폴더를 C:\Users\ksw\AppData\Local\Programs\Python\Python313\newproject 처럼 파이썬 설치 장소에 옮기고 실행한다. import 모듈에 노란색 물결표가 나올 수 있지만 무시해도 실행은 가능하다.
